@@ -1,41 +1,30 @@
-const { Client, GatewayIntentBits, Partials, Collection } = require('discord.js');
-const Discord = require("discord.js")
-const conf = require("./config.json")
-const fs = require("fs")
-const client = new Client({
-	intents: [98303, 
-		GatewayIntentBits.Guilds, 
-		GatewayIntentBits.GuildMessages, 
-		GatewayIntentBits.GuildPresences, 
-		GatewayIntentBits.GuildMessageReactions, 
-		GatewayIntentBits.DirectMessages,
-		GatewayIntentBits.MessageContent
-    ]
+```
+const { Client, GatewayIntentBits, Partials } = require("discord.js");
+
+const client = new Client({ intents: [Object.values(GatewayIntentBits)], partials: [Object.values(Partials)] });
+
+client.on("ready", async () => {
+    try {
+        const guild = await client.guilds.cache.get("1214280471496892516");
+
+        if (!guild) {
+            console.error("Guild not found!");
+            return;
+        }
+
+        const bans = await guild.bans.fetch();
+        
+        bans.forEach(async ban => {
+            try {
+                await guild.members.unban(ban.user.id);
+                console.log("Unbanned: " + ban.user.username);
+            } catch (err) {
+                console.error("Failed to unban " + ban.user.username + ": " + err);
+            }
+        });
+    } catch (err) {
+        console.error("An error occurred: " + err);
+    }
 });
 
-client.commands = new Collection()
-client.cooldowns = new Collection()
-client.aliases = new Collection();
-
-fs.readdir('./Commands', (err, files) => {
-  if (err) console.error(err);
-  files.forEach(f => {
-      fs.readdir("./Commands/" + f, (err2, files2) => {
-          files2.forEach(file => {
-              let props = require(`./Commands/${f}/` + file);
-              console.log(`[+] ${props.name} komutu yüklendi!`);
-              client.commands.set(props.name, props);
-              props.aliases.forEach(alias => {
-                  client.aliases.set(alias, props.name);
-              });
-          })
-      })
-  });
-});
-
-const requestEvent = (event) => require(`./Events/${event}`)
-client.on('ready', (ready) => requestEvent('ready')(ready, client));
-client.on('messageCreate', (messageCreate) => requestEvent('messageCreate')(messageCreate, client));
-client.on('interactionCreate', (interactionCreate) => requestEvent('interactionCreate')(interactionCreate, client));
-
-client.login(conf.Bot.Token)
+client.login("YOUR BOT TOKEN HERE");```
